@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const storage = require("../lib/multer");
-const { Create, Upload} = require('../controller/user.controller')
+const { Create, Upload } = require('../controller/user.controller')
 
 /**
  * @swagger
@@ -48,7 +48,7 @@ router.post('/users/register', Create)
  *       404:
  *         description: Not found
  */
-router.post('/users/upload-image', Upload)
+router.post('/users/upload-image', storage.image.single("images"), Upload)
 
 
 module.exports = router
