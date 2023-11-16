@@ -1,9 +1,8 @@
-const { HashPassword, ComparePassword } = require('../helper/hash_pass_helper')
+const qr = require('node-qr-image')
 const { ResponseTemplate } = require('../helper/template.helper')
 const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
-var jwt = require('jsonwebtoken')
 
 async function UploadPicture(req, res) {
     const stringFile = req.file.buffer.toString("base64")
@@ -54,40 +53,38 @@ async function UploadPicture(req, res) {
 async function CreateTransaction(req, res) {
     const { amount } = req.body
 
+    var qr_png = qr.image(amount, { type: "png" });
+    qr_png.pipe(
+        require("fs").createWriteStream(
+            `./public/qr/${message.toLowerCase()}.png`
+        )
+    );
+
     const payload = {
         user_id: Number(req.user.id),
         amount,
-        
-    }
-
-    const emailUser = await prisma.user.findUnique({
-        where: {email: payload.email},
-    });
-
-    if (emailUser) {
-        let resp = ResponseTemplate(null, 'Email already exist', null, 404)
-        res.json(resp)
-        return
+        payment_link: qr_png
     }
 
     try {
         
-        await prisma.user.create({
+        await prisma.transaction.create({
             data: payload
         });
 
-        const userView = await prisma.user.findUnique({
+        const transactionView = await prisma.user.findUnique({
             where: {
-                email: payload.email
+                user_id: payload.user_id
             },
             select: {
-                id: true,
-                name: true,
-                email: true
+                user_id: true,
+                amount: true,
+                payment_link: true,
+                is_paid: true
             },
         });
 
-        let resp = ResponseTemplate(userView, 'success', null, 200)
+        let resp = ResponseTemplate(transactionView, 'success', null, 200)
         res.json(resp);
         return
 
