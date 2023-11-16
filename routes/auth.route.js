@@ -1,14 +1,13 @@
 const express = require('express')
 const router = express.Router()
-const { UploadPicture, CreateTransaction } = require('../controller/user.controller')
-const { Auth } = require('../middleware/middleware')
+const { Register, Login } = require('../controller/auth.controller')
 
 /**
  * @swagger
- * /api/v1/users/Upload:
+ * /api/v1/auth/register:
  *   post:
  *     tags:
- *      - "User"
+ *      - "Auth"
  *     summary: example to create user
  *     requestBody:
  *        required: true
@@ -33,15 +32,15 @@ const { Auth } = require('../middleware/middleware')
  *       500:
  *         description: Internal server error
  */
-router.post('/users/Upload', Auth, UploadPicture)
+router.post('/auth/register', Register)
 
 /**
  * @swagger
- * /api/v1/users/create:
+ * /api/v1/auth/login:
  *   post:
  *     tags:
- *      - "User"
- *     summary: example to create user
+ *      - "Auth"
+ *     summary: example to login user
  *     requestBody:
  *        required: true
  *        content:
@@ -49,22 +48,17 @@ router.post('/users/Upload', Auth, UploadPicture)
  *            schema:
  *              type: object
  *              properties:
- *                name:
- *                  type: string
  *                email:
  *                  type: string
  *                password:
  *                  type: string
- *                address:
- *                  type: string
  *     responses:
  *       200:
  *         description: Successful response
- *       404:
- *         description: Not found
- *       500:
- *         description: Internal server error
+ *       400:
+ *         description: Bad request
  */
-router.post('/users/Create', Auth, CreateTransaction)
+router.post('/auth/login', Login)
+
 
 module.exports = router

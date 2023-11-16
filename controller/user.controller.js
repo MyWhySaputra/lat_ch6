@@ -5,17 +5,59 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 var jwt = require('jsonwebtoken')
 
-async function Create(req, res) {
+async function UploadPicture(req, res) {
+    const stringFile = req.file.buffer.toString("base64")
 
-    const { name, email, password, address } = req.body
-
-    const hashPass = await HashPassword(password)
+    const uploadFile = await imagekit.upload({
+        fileName: req.file.originalname,
+        file: stringFile,
+    });
 
     const payload = {
-        name,
-        email,
-        password: hashPass,
-        address
+        profile_picture: uploadFile.url
+    }
+
+    try {
+        
+        await prisma.user.update({
+            where: {
+                id: Number(req.user.id)
+            },
+            data: payload
+        })
+
+        const userView = await prisma.user.findUnique({
+            where: {
+                id: Number(req.user.id)
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profile_picture: true,
+                address: true
+            },
+        });
+
+        let resp = ResponseTemplate(userView, 'success', null, 200)
+        res.status(200).json(resp);
+        return
+
+    } catch (error) {
+        let resp = ResponseTemplate(null, 'internal server error', error, 500)
+        res.status(500).json(resp)
+        return
+
+    }
+}
+
+async function CreateTransaction(req, res) {
+    const { amount } = req.body
+
+    const payload = {
+        user_id: Number(req.user.id),
+        amount,
+        
     }
 
     const emailUser = await prisma.user.findUnique({
@@ -31,7 +73,7 @@ async function Create(req, res) {
     try {
         
         await prisma.user.create({
-            data: payload,
+            data: payload
         });
 
         const userView = await prisma.user.findUnique({
@@ -41,8 +83,7 @@ async function Create(req, res) {
             select: {
                 id: true,
                 name: true,
-                email: true,
-                address: true
+                email: true
             },
         });
 
@@ -58,22 +99,7 @@ async function Create(req, res) {
     }
 }
 
-async function Upload(req, res) {
-
-    
-    
-    const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
-
-    return res.status(200).json({
-        status: true,
-        message: 'success',
-        data: {
-            imageUrl
-        }
-    })
-}
-
 module.exports = {
-    Create,
-    Upload
+    UploadPicture,
+    CreateTransaction
 }

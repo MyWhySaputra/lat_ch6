@@ -17,6 +17,7 @@ model user {
   password        String     @db.VarChar(255)
   profile_picture String?    @db.VarChar(255)
   address         String     @db.Text
+  member_id       Int        @default(autoincrement())
   createAt  DateTime  @default(now())
   updateAt  DateTime? @default(now())
   deletedAt DateTime?
